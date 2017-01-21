@@ -7,7 +7,7 @@ namespace RatKing {
 	public class WalkArrow : Interactable {
 		public override void Interact(Player player) {
 			base.Interact(player);
-			player.Move(transform.forward * Main.Inst.roomSize);
+			player.Move(transform.forward * Main.Inst.tileSize); //, () => Main.Inst.UpdateVisibility(player.curPos));
 		}
 	}
 

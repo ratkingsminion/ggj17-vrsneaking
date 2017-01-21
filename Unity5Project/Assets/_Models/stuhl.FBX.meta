@@ -9,21 +9,26 @@ ModelImporter:
     100002: //RootNode
     100004: tisch
     100006: wand
+    100008: Object001
     400000: Stuhl
     400002: //RootNode
     400004: tisch
     400006: wand
+    400008: Object001
     2300000: Stuhl
     2300002: tisch
     2300004: wand
     2300006: //RootNode
+    2300008: Object001
     3300000: Stuhl
     3300002: tisch
     3300004: wand
     3300006: //RootNode
+    3300008: Object001
     4300000: wand
     4300002: Stuhl
     4300004: tisch
+    4300006: Object001
   materials:
     importMaterials: 1
     materialName: 0

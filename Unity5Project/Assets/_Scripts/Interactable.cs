@@ -15,6 +15,10 @@ namespace RatKing {
 
 		//
 
+		public float GetFactor() {
+			return Mathf.Clamp01(lookTimer / lookTime);
+		}
+
 		public void LookingAt() {
 			if (!mayLookAt) { return; }
 			if (!runningLookCoroutine) { MovementEffects.Timing.RunCoroutine(LookingAtCR()); }
@@ -47,7 +51,9 @@ namespace RatKing {
 		}
 
 		public virtual void Interact(Player player) {
+#if UNITY_EDITOR
 			Debug.Log("Interact with " + name);
+#endif
 		}
 	}
 
