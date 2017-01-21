@@ -7,6 +7,8 @@ namespace RatKing {
 	public class Main : MonoBehaviour {
 		public static Main Inst { get; private set; }
 		//
+		public Player player;
+		//
 		public float roomSize = 8f;
 
 		//
@@ -31,8 +33,8 @@ namespace RatKing {
 					//print(vrLauncher.name);
 				}
 				if (GvrViewer.Instance.Triggered) {
-					print("triggered!");
-					GvrViewer.Instance.VRModeEnabled = !GvrViewer.Instance.VRModeEnabled;
+					//print("triggered!");
+					//GvrViewer.Instance.VRModeEnabled = !GvrViewer.Instance.VRModeEnabled;
 				}
 			}
 		}

@@ -71,6 +71,7 @@
     <Compile Include="Assets\Plugins\LeanTween\LeanAudio.cs" />
     <Compile Include="Assets\Plugins\LeanTween\LeanTest.cs" />
     <Compile Include="Assets\Plugins\LeanTween\LeanTween.cs" />
+    <Compile Include="Assets\Plugins\Trinary Software\Timing.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Base\ImageEffects\GlobalFog.shader" />

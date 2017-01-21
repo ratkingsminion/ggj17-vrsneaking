@@ -189,6 +189,7 @@
     <Compile Include="Assets\GoogleVR\Scripts\Utilities\GvrIntent.cs" />
     <Compile Include="Assets\GoogleVR\Scripts\Video\GvrVideoPlayerTexture.cs" />
     <Compile Include="Assets\_Scripts\Interactable.cs" />
+    <Compile Include="Assets\_Scripts\Loot.cs" />
     <Compile Include="Assets\_Scripts\Main.cs" />
     <Compile Include="Assets\_Scripts\Player.cs" />
     <Compile Include="Assets\_Scripts\WalkArrow.cs" />
