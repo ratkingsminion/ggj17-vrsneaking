@@ -7,6 +7,8 @@ namespace RatKing {
 	public class Main : MonoBehaviour {
 		public static Main Inst { get; private set; }
 		//
+		public AudioClip music;
+		public GameObject[] hideOnStart;
 		public Player player;
 		public MeshFilter blacknessFilter;
 		public float tileSize = 8f;
@@ -17,36 +19,55 @@ namespace RatKing {
 		public Transform endContent;
 		public Material rainMaterial;
 		public float rainSpeed = 1f;
+		public Base.Sound soundDeath;
+		[Header("Lightning")]
+		public float lgtnMinTime = 10f;
+		public float lgtnMaxTime = 30f;
+		public float lgtnMinDuration = 0.5f, lgtnMaxDuration = 3f;
+		public Color lgtnAmbient = Color.white;
+		public Light lgtnLightningLight;
+		public Base.Sound soundThunder;
 		//
 		Dictionary<Base.Position2, Tile> tilesByPos = new Dictionary<Base.Position2, Tile>();
-		List<Room> rooms = new List<Room>();
+		public List<Enemy> enemies { get; private set; }
+		public List<Room> rooms { get; private set; }
 		//
 		HashSet<Room> curVisibleRooms = new HashSet<Room>();
 		HashSet<Room> newVisibleRooms = new HashSet<Room>();
-		bool dead;
+		bool dead, won;
 		List<Radio.Direction> endDirections;
 		int endDirectionsIdx = -1;
 		bool endDoorShown;
 		Vector2 rainStartUV, rainCurUV;
+		int lootCount;
+		Color nrmlAmbient;
+		float lgtnTimer;
 		//
 		public Base.Position2 winFromPos { get; private set; }
 		public Base.Position2 winToPos { get; private set; }
 
 		//
 
-		public Tile GetTile(Base.Position2 pos) {
-			if (tilesByPos.ContainsKey(pos)) {
-				return tilesByPos[pos];
-			}
-			return null;
-		}
-
 		void Awake() {
 			Inst = this;
+			//
+			enemies = new List<Enemy>();
+			rooms = new List<Room>();
 			Map.MapTheWorld(tileSize);
 			endContent.gameObject.SetActive(false);
 			rainCurUV = rainStartUV = rainMaterial.GetTextureOffset("_MainTex");
 			//
+			// enemies
+			for (var iter = levelParent.GetComponentsInChildren<Enemy>(true).GetEnumerator(); iter.MoveNext();) {
+				var enemy = (Enemy)(iter.Current);
+				enemies.Add(enemy);
+			}
+			// loot
+			lootCount = 0;
+			for (var iter = levelParent.GetComponentsInChildren<Loot>(true).GetEnumerator(); iter.MoveNext();) {
+				var loot = (Loot)(iter.Current);
+				lootCount += loot.value;
+			}
 			// tiles
 			for (var iter = levelParent.GetComponentsInChildren<Tile>().GetEnumerator(); iter.MoveNext();) {
 				var tile = (Tile)(iter.Current);
@@ -96,6 +117,16 @@ namespace RatKing {
 		}
 
 		void Start() {
+#if UNITY_EDITOR
+			lgtnTimer = 1f;
+#else
+			lgtnTimer = Random.Range(lgtnMinTime, lgtnMaxTime);
+#endif
+			lgtnLightningLight.enabled = false;
+			nrmlAmbient = RenderSettings.ambientLight;
+			for (int i = 0; i < hideOnStart.Length; ++i) {
+				hideOnStart[i].SetActive(false);
+			}
 			//print("vr mode enabled " + GvrViewer.Instance.VRModeEnabled);
 #if UNITY_EDITOR
 			//print("viewer type " + GvrViewer.Instance.ViewerType);
@@ -103,9 +134,11 @@ namespace RatKing {
 			var pos0 = new Base.Position2(0, 0);
 			UpdateVisibility(pos0, false);
 			Main.Inst.VisitRoom(pos0);
+			//
+			Base.Music.Play(music, 0.5f, 5f);
 		}
 
-		void Update() {
+		void Update() {			
 			if (GvrViewer.Instance != null) {
 #if UNITY_EDITOR
 				if (Input.GetKeyDown(KeyCode.Escape)) {
@@ -117,8 +150,55 @@ namespace RatKing {
 					Application.Quit();
 				}
 			}
+			if (dead || won) { return; }
+
+
+			lgtnTimer -= Time.deltaTime;
+			if (lgtnTimer < 0f) {
+				Lightning();
+			}
+
 			rainCurUV.y += Time.deltaTime * rainSpeed;
 			rainMaterial.SetTextureOffset("_MainTex", rainCurUV);
+		}
+
+		//
+
+		public Tile GetTile(Base.Position2 pos) {
+			if (tilesByPos.ContainsKey(pos)) {
+				return tilesByPos[pos];
+			}
+			return null;
+		}
+
+		public bool EnemyWillCollideWith(Enemy checker) {
+			for (var iter = enemies.GetEnumerator(); iter.MoveNext();) {
+				var e = iter.Current;
+				if (e == checker) { continue; }
+				if ((!e.moving && e.curPos == checker.targetPos) || (e.moving && e.targetPos == checker.targetPos)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		//
+
+		void Lightning() {
+			var duration = Random.Range(lgtnMinDuration, lgtnMaxDuration);
+			lgtnTimer = Random.Range(lgtnMinTime, lgtnMaxTime) + duration;
+			float r = Random.value;
+			LeanTween.value(0f, 1f, duration)
+				.setOnUpdate((float f) => {
+					lgtnLightningLight.enabled = Base.Helpers.Randomness.SimplexNoise.NormalizedNoise(10f, (r + f) * 10f, 0f) > 0.4f;
+					if (Base.Helpers.Randomness.SimplexNoise.NormalizedNoise(0.6f, (r - f) * 10f, -700f) > 0.5f) { lgtnLightningLight.transform.Rotate(0f, Random.Range(0f, 180f), 0f, Space.World); }
+					RenderSettings.ambientLight = Color.Lerp(lgtnAmbient, nrmlAmbient, f);
+				})
+				.setOnComplete(() => {
+					lgtnLightningLight.enabled = false;
+					RenderSettings.ambientLight = nrmlAmbient;
+				});
+			MovementEffects.Timing.CallDelayed(Random.Range(2f, 3f), () => soundThunder.Play());
 		}
 
 		//
@@ -179,6 +259,7 @@ namespace RatKing {
 		//
 
 		public void Win() {
+			won = true;
 			for (var iter = levelParent.GetComponentsInChildren<Renderer>().GetEnumerator(); iter.MoveNext();) {
 				((Renderer)(iter.Current)).gameObject.SetActive(false);
 			}
@@ -186,6 +267,7 @@ namespace RatKing {
 			Score.Deactivate();
 			player.allowInput = false;
 			winHead.gameObject.SetActive(true);
+			winHead.EndMessage(Score.score.ToString(), lootCount.ToString());
 			blacknessFilter.gameObject.SetActive(true);
 		}
 
@@ -199,6 +281,7 @@ namespace RatKing {
 		}
 
 		void DieThen() {
+			soundDeath.Play();
 			for (var iter = levelParent.GetComponentsInChildren<Enemy>().GetEnumerator(); iter.MoveNext();) {
 				((Enemy)(iter.Current)).gameObject.SetActive(false);
 			}

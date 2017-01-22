@@ -20,6 +20,7 @@ namespace RatKing {
 		public bool allowInput { get; set; }
 		public Base.Position2 curPos { get; private set; }
 		public Base.Position2 lastPos { get; private set; }
+		public int keys { get; set; }
 
 		//
 

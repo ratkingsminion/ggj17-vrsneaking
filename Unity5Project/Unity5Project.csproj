@@ -273,6 +273,7 @@
     <Compile Include="Assets\_Scripts\Room.cs" />
     <Compile Include="Assets\_Scripts\Score.cs" />
     <Compile Include="Assets\_Scripts\Tile.cs" />
+    <Compile Include="Assets\_Scripts\VRChange.cs" />
     <Compile Include="Assets\_Scripts\Waitsymbol.cs" />
     <Compile Include="Assets\_Scripts\WalkArrow.cs" />
     <Compile Include="Assets\_Scripts\WinHead.cs" />

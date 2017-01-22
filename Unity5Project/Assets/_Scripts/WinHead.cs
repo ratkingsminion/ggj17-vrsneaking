@@ -5,6 +5,7 @@ using System.Collections.Generic;
 namespace RatKing {
 
 	public class WinHead : MonoBehaviour {
+		public TMPro.TextMeshPro endMsg;
 		public Transform endStuff;
 		public float wobbleSpeed = 1f;
 		public float wobbleStrength = 5f;
@@ -24,6 +25,10 @@ namespace RatKing {
 			if (timer > maxTime || GvrViewer.Instance.Triggered) {
 				UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
 			}
+		}
+
+		public void EndMessage(string myLoot, string lootOverall) {
+			endMsg.text = endMsg.text.Replace("[myloot]", myLoot).Replace("[all]", lootOverall);
 		}
 	}
 

@@ -17,7 +17,7 @@ namespace RatKing {
 		static float fadeInSpeed = 2f;
 		static float fadeOutSpeed = 1f;
 		static Material mat;
-		static float tileWidth = 0.3f;
+		static float tileWidth = 0.2f;
 		static Mesh mesh;
 		static List<Vector3> vertices;
 		static List<Vector3> normals;
