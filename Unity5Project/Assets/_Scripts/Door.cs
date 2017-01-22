@@ -8,7 +8,7 @@ namespace RatKing {
 		[Header("Door")]
 		public float openAngle = 100f;
 		public float openTime = 1f;
-		public GameObject message;
+		public GameObject message; //, messageBack;
 		public GameObject[] doors;
 		public GameObject[] removeAfterwards;
 		public bool needsKey;
@@ -20,6 +20,7 @@ namespace RatKing {
 
 		void Awake() {
 			if (message != null) { message.gameObject.SetActive(false); }
+			//if (messageBack != null) { messageBack.gameObject.SetActive(false); }
 			if (needsKey) { closed = true; }
 		}
 
@@ -28,8 +29,17 @@ namespace RatKing {
 			if (needsKey && closed) {
 				if (player.keys <= 0) {
 					message.gameObject.SetActive(true);
+					//messageBack.gameObject.SetActive(true);
+					MovementEffects.Timing.CallContinuously(openTime, () => {
+						if (message != null && message.transform != null) {
+							var t = message.transform;
+							//t.LookAt(2f * t.position - player.camTrans.position, Vector3.up);
+							t.LookAt(player.camTrans.position, Vector3.up);
+						}
+					});
 					MovementEffects.Timing.CallDelayed(openTime, () => {
 						if (message != null && message.gameObject != null) { message.gameObject.SetActive(false); }
+						//if (messageBack != null && messageBack.gameObject != null) { messageBack.gameObject.SetActive(false); }
 					});
 					return;
 				}
