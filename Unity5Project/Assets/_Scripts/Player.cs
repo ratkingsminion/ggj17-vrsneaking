@@ -7,23 +7,35 @@ namespace RatKing {
 	public class Player : MonoBehaviour {
 		public float lookAtSeconds = 1f;
 		public float mapMinAngle = 20f;
+		public float scoreMinAngle = 30f;
 		public Transform pointer; // for testing mostly
 		public Waitsymbol waitSymbol;
 		public GvrHead head;
 		public Transform camTrans;
 		public float moveSpeed = 5f;
 		public Transform walkArrow;
+		public Transform scoreBoard;
 		//
 		public bool moving { get; private set; }
+		public bool allowInput { get; set; }
 		public Base.Position2 curPos { get; private set; }
+		public Base.Position2 lastPos { get; private set; }
 
 		//
 
+		void Awake() {
+			allowInput = true;
+		}
+
 		void Start() {
-			curPos = Base.Position2.RoundedVector(new Vector2(transform.position.x, transform.position.z) / Main.Inst.tileSize);
+			lastPos = curPos = Base.Position2.RoundedVector(new Vector2(transform.position.x, transform.position.z) / Main.Inst.tileSize);
 		}
 
 		void Update() {
+			if (!allowInput) {
+				return;
+			}
+			
 			// looking at something.
 			RaycastHit hitInfo;
 			Ray ray = new Ray(camTrans.position, camTrans.forward);
@@ -54,8 +66,13 @@ namespace RatKing {
 			else {
 				walkArrow.gameObject.SetActive(false);
 			}
+			//
+			var angleDown = Vector3.Angle(camTrans.forward, Vector3.down);
+			var angleUp = Vector3.Angle(camTrans.forward, Vector3.up);
 			// looking down
-			Map.Seen(Vector3.Angle(camTrans.forward, Vector3.down) < mapMinAngle);
+			Map.Seen(angleDown < mapMinAngle);
+			// score board
+			Score.Seen(head.transform.localEulerAngles.y, angleUp < scoreMinAngle);
 		}
 
 		//
@@ -66,16 +83,29 @@ namespace RatKing {
 			moving = true;
 			var targetPos = transform.position + dir;
 			var nextPos = Base.Position2.RoundedVector(new Vector2(targetPos.x, targetPos.z) / Main.Inst.tileSize);
+
 			Main.Inst.UpdateVisibility(nextPos, false);
-			LeanTween.move(gameObject, targetPos, dir.magnitude / moveSpeed)
-				.setEase(LeanTweenType.easeInOutSine)
-				.setOnComplete(() => {
-					moving = false;
-					curPos = nextPos;
-					Map.SetCross(curPos);
-					Main.Inst.UpdateVisibility(curPos, true);
-					Main.Inst.VisitRoom(curPos);
-				});
+			if (curPos == Main.Inst.winFromPos && nextPos == Main.Inst.winToPos) {
+				// way of the winner
+				LeanTween.move(gameObject, transform.position + dir * 0.5f, dir.magnitude / moveSpeed)
+					.setEase(LeanTweenType.easeInSine)
+					.setOnComplete(() => {
+						Main.Inst.Win();
+					});
+			}
+			else {
+				Main.Inst.Step(dir, targetPos);
+				LeanTween.move(gameObject, targetPos, dir.magnitude / moveSpeed)
+					.setEase(LeanTweenType.easeInOutSine)
+					.setOnComplete(() => {
+						moving = false;
+						lastPos = curPos;
+						curPos = nextPos;
+						Map.SetCross(curPos);
+						Main.Inst.UpdateVisibility(curPos, true);
+						Main.Inst.VisitRoom(curPos);
+					});
+			}
 		}
 
 		public void Collect(GameObject go, float time) {

@@ -8,21 +8,27 @@ namespace RatKing {
 		public float smoothRotTime = 0.5f; // = 90f;
 		public float moveTime = 2f; // = 3f;
 		public Base.Position2[] moves;
+		public Transform upAndDown;
+		public float amplitude = 0.1f;
+		public float frequency = 10f;
 		//
-		Base.Position2 curPos;
-		Vector3 targetWorldPos;
+		Base.Position2 curPos, targetPos;
+		Vector3 targetWorldPos, startUpAndDownPos;
 		int curIndex;
 		bool moving;
 		float curRotVel;
 		bool visible = true;
+		float upAndDownTime;
 
 		//
 
 		void Start() {
 			var pos = transform.position;
 			curPos = Base.Position2.RoundedVector(new Vector2(pos.x, pos.z) / Main.Inst.tileSize);
-			var targetPos = curPos + moves[curIndex];
+			targetPos = curPos + moves[curIndex];
 			targetWorldPos = new Vector3(targetPos.x, 0f, targetPos.y) * Main.Inst.tileSize;
+			startUpAndDownPos = upAndDown.localPosition;
+			upAndDownTime = Random.value;
 		}
 
 		void Update() {
@@ -30,21 +36,33 @@ namespace RatKing {
 			curPos = Base.Position2.RoundedVector(new Vector2(pos.x, pos.z) / Main.Inst.tileSize);
 			SetVisibility();
 
+			// up and down
+			upAndDownTime += Time.deltaTime;
+			upAndDown.localPosition = startUpAndDownPos + new Vector3(0f, Mathf.Sin(upAndDownTime * frequency) * amplitude, 0f);
+
 			// rotate towards goal
 			var dir = new Vector3(moves[curIndex].x, 0f, moves[curIndex].y).normalized;
 			var angle = Vector3.Angle(transform.forward, dir);
 			transform.eulerAngles = new Vector3(0f, Mathf.SmoothDampAngle(transform.eulerAngles.y, Quaternion.LookRotation(dir, Vector3.up).eulerAngles.y, ref curRotVel, smoothRotTime), 0f);
 
+			// move to next tile
 			if (!moving && Vector3.Angle(transform.forward, dir) <= 0.05f) {
 				moving = true;
 				LeanTween.move(gameObject, targetWorldPos, moveTime)
 					.setEase(LeanTweenType.easeInOutSine)
 					.setOnComplete(() => {
 						curIndex = (curIndex + 1) % moves.Length;
-						var targetPos = curPos + moves[curIndex];
+						targetPos = curPos + moves[curIndex];
 						targetWorldPos = new Vector3(targetPos.x, 0f, targetPos.y) * Main.Inst.tileSize;
 						moving = false;
 					});
+			}
+
+			// check player distance
+			var playerPos = Main.Inst.player.transform.position;
+			var pPos = Base.Position2.RoundedVector(new Vector2(playerPos.x, playerPos.z) / Main.Inst.tileSize);
+			if ((!moving && pPos == curPos) || (pPos == curPos && Vector3.Distance(pos, playerPos) < 0.5f) || (moving && pPos == curPos && targetPos == pPos) || (moving && pPos == curPos && (targetPos == Main.Inst.player.curPos || targetPos == Main.Inst.player.lastPos))) {
+				Main.Inst.Die();
 			}
 		}
 

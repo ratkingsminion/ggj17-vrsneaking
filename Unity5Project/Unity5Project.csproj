@@ -260,16 +260,21 @@
     <Compile Include="Assets\TextMesh Pro\Scripts\TextContainer.cs" />
     <Compile Include="Assets\TextMesh Pro\Scripts\TextMeshPro.cs" />
     <Compile Include="Assets\TextMesh Pro\Scripts\TextMeshProUGUI.cs" />
+    <Compile Include="Assets\_Scripts\Door.cs" />
+    <Compile Include="Assets\_Scripts\EndHead.cs" />
     <Compile Include="Assets\_Scripts\Enemy.cs" />
     <Compile Include="Assets\_Scripts\Interactable.cs" />
     <Compile Include="Assets\_Scripts\Loot.cs" />
     <Compile Include="Assets\_Scripts\Main.cs" />
     <Compile Include="Assets\_Scripts\Map.cs" />
     <Compile Include="Assets\_Scripts\Player.cs" />
+    <Compile Include="Assets\_Scripts\Radio.cs" />
     <Compile Include="Assets\_Scripts\Room.cs" />
+    <Compile Include="Assets\_Scripts\Score.cs" />
     <Compile Include="Assets\_Scripts\Tile.cs" />
     <Compile Include="Assets\_Scripts\Waitsymbol.cs" />
     <Compile Include="Assets\_Scripts\WalkArrow.cs" />
+    <Compile Include="Assets\_Scripts\WinHead.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Base\ImageEffects\GlobalFog.shader" />

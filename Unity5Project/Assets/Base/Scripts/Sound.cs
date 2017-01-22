@@ -15,6 +15,8 @@ namespace RatKing.Base {
 		float originalVolume;
 		float originalPitch;
 		bool fresh = true;
+		float startVolume;
+		float length;
 		
 		//
 
@@ -57,6 +59,15 @@ namespace RatKing.Base {
 			}
 		}
 
+		public void SetVolume(float v) {
+			var source = GetComponent<AudioSource>();
+			source.volume = startVolume * v * mainVolume;
+		}
+
+		public float GetLength() {
+			return length;
+		}
+
 		//
 
 		void Playing() {
@@ -72,8 +83,9 @@ namespace RatKing.Base {
 
 		IEnumerator PlayingCR(AudioSource source) {
 			AudioClip clip = clips[Random.Range(0, clips.Length)];
-			source.volume = originalVolume * (1.0f + Random.Range(-randomVolume, randomVolume) * 0.5f) * mainVolume;
+			source.volume = (startVolume = originalVolume * (1.0f + Random.Range(-randomVolume, randomVolume) * 0.5f)) * mainVolume;
 			source.pitch = originalPitch * (1.0f + Random.Range(-randomPitch, randomPitch) * 0.5f);
+			length = clip.length * source.pitch;
 			if (source.loop) {
 				source.clip = clip;
 				source.Play();

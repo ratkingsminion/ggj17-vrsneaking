@@ -7,6 +7,8 @@ namespace RatKing {
 	public class Interactable : MonoBehaviour {
 		[Header("Interactable")]
 		public float lookTime = 1f;
+		public bool canLookAtAgain = true;
+		public float resetTime = 1f;
 		//
 		protected float lookTimer;
 		protected bool curLookingAt;
@@ -27,15 +29,15 @@ namespace RatKing {
 
 		IEnumerator<float> LookingAtCR() {
 			runningLookCoroutine = true;
-			//lookTimer = lookTime;
 			while (true) {
-				//print(lookTimer + " " + curLookingAt + " " + runningLookCoroutine + " " + mayLookAt);
 				if (curLookingAt) {
 					lookTimer += Time.deltaTime;
 					if (lookTimer >= lookTime) {
 						Interact(Main.Inst.player);
 						mayLookAt = false;
-						MovementEffects.Timing.CallDelayed(1f, () => { mayLookAt = true; });
+						if (canLookAtAgain) {
+							MovementEffects.Timing.CallDelayed(resetTime, () => { mayLookAt = true; });
+						}
 						break;
 					}
 				}

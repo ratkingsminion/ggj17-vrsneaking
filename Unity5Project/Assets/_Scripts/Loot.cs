@@ -12,7 +12,7 @@ namespace RatKing {
 		public override void Interact(Player player) {
 			base.Interact(player);
 			player.Collect(gameObject, takeTime);
-			// TODO: player.AddScore();
+			Score.Add(value);
 			mayLookAt = false;
 		}
 	}

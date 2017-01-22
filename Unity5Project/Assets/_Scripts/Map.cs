@@ -7,8 +7,8 @@ namespace RatKing {
 	public class Map : MonoBehaviour {
 		public Material material;
 		//
-		static Base.Position2[] checkTileDirs = new[] { new Base.Position2(0, 1), new Base.Position2(1, 0), new Base.Position2(0, -1), new Base.Position2(-1, 0) };
-		static Vector3[] checkDirs = new[] { Vector3.forward, Vector3.right, Vector3.back, Vector3.left };
+		public static Base.Position2[] checkTileDirs = new[] { new Base.Position2(0, 1), new Base.Position2(1, 0), new Base.Position2(0, -1), new Base.Position2(-1, 0) };
+		public static Vector3[] checkDirs = new[] { Vector3.forward, Vector3.right, Vector3.back, Vector3.left };
 		static List<Base.Position2> tiles;
 		static Base.Position2 min, max;
 		enum ConnectionType { Wall, Door, None }
@@ -30,11 +30,18 @@ namespace RatKing {
 
 		//
 
+		public static void Deactivate() {
+			trans.gameObject.SetActive(false);
+		}
+
 		void Awake() {
+			mesh = null;
+			mat = null;
 			trans = transform;
 			transStartPos = trans.localPosition;
 			CreateMesh();
 			// transform.position += new Vector3(max.x - min.x, 0f, max.y - min.y) * tileWidth * 0.5f;
+			SetCross(Base.Position2.zero);
 		}
 
 		public static void HideCross() {
@@ -114,6 +121,7 @@ namespace RatKing {
 			uv.Add(new Vector2(d - t + it, 1f - t)); uv.Add(new Vector2(d + t, 1f - t));
 
 			mr.material = mat = new Material(material);
+			mat.color = Base.Helpers.Colors.WithAlpha(mat.color, 0f);
 			mf.sharedMesh = mesh;
 			mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			mr.receiveShadows = false;

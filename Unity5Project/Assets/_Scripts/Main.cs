@@ -8,21 +8,37 @@ namespace RatKing {
 		public static Main Inst { get; private set; }
 		//
 		public Player player;
+		public MeshFilter blacknessFilter;
 		public float tileSize = 8f;
 		public Transform levelParent;
 		public Transform pillarParent;
+		public EndHead deadHead;
+		public WinHead winHead;
+		public Transform endContent;
+		public Material rainMaterial;
+		public float rainSpeed = 1f;
 		//
 		Dictionary<Base.Position2, Tile> tilesByPos = new Dictionary<Base.Position2, Tile>();
 		List<Room> rooms = new List<Room>();
 		//
 		HashSet<Room> curVisibleRooms = new HashSet<Room>();
 		HashSet<Room> newVisibleRooms = new HashSet<Room>();
+		bool dead;
+		List<Radio.Direction> endDirections;
+		int endDirectionsIdx = -1;
+		bool endDoorShown;
+		Vector2 rainStartUV, rainCurUV;
+		//
+		public Base.Position2 winFromPos { get; private set; }
+		public Base.Position2 winToPos { get; private set; }
 
 		//
 
 		void Awake() {
 			Inst = this;
 			Map.MapTheWorld(tileSize);
+			endContent.gameObject.SetActive(false);
+			rainCurUV = rainStartUV = rainMaterial.GetTextureOffset("_MainTex");
 			//
 			// tiles
 			for (var iter = levelParent.GetComponentsInChildren<Tile>().GetEnumerator(); iter.MoveNext();) {
@@ -52,12 +68,27 @@ namespace RatKing {
 					if (tilesByPos.ContainsKey(tiles[i])) { tilesByPos[tiles[i]].AddPillar(pillar.gameObject); }
 				}
 			}
+			//
+			var m = blacknessFilter.mesh;
+			var t = m.triangles;
+			for (int i = t.Length - 1; i >= 0; i -= 3) {
+				var s = t[i]; t[i] = t[i - 1]; t[i - 1] = s;
+			}
+			m.triangles = t;
+			blacknessFilter.mesh = m;
+			blacknessFilter.gameObject.SetActive(false);
+			//
+			deadHead.gameObject.SetActive(true);
+		}
+
+		void OnDestroy() {
+			rainMaterial.SetTextureOffset("_MainTex", rainStartUV);
 		}
 
 		void Start() {
-			print("vr mode enabled " + GvrViewer.Instance.VRModeEnabled);
+			//print("vr mode enabled " + GvrViewer.Instance.VRModeEnabled);
 #if UNITY_EDITOR
-			print("viewer type " + GvrViewer.Instance.ViewerType);
+			//print("viewer type " + GvrViewer.Instance.ViewerType);
 #endif
 			var pos0 = new Base.Position2(0, 0);
 			UpdateVisibility(pos0, false);
@@ -76,9 +107,94 @@ namespace RatKing {
 					Application.Quit();
 				}
 			}
+			rainCurUV.y += Time.deltaTime * rainSpeed;
+			rainMaterial.SetTextureOffset("_MainTex", rainCurUV);
 		}
 
 		//
+
+		public void SetEndSteps(List<Radio.Direction> directions) {
+			if (endDoorShown) { return; }
+			endDirections = new List<Radio.Direction>(directions);
+			endDirectionsIdx = 0;
+		}
+
+		public void Step(Vector3 dir, Vector3 targetPos) {
+			if (endDoorShown || endDirectionsIdx < 0) { return; }
+			var ddir = Base.Position3.RoundedVector(dir.normalized);
+			Radio.Direction rdir = Radio.Direction.East;
+			if (ddir.x == 0 && ddir.z == 1) { rdir = Radio.Direction.North; }
+			else if (ddir.x == 0 && ddir.z == -1) { rdir = Radio.Direction.South; }
+			else if (ddir.x == 1 && ddir.z == 0) { rdir = Radio.Direction.East; }
+			else if (ddir.x == -1 && ddir.z == 0) { rdir = Radio.Direction.West; }
+			else { rdir = Radio.Direction.NONE; } // you have to start again :(
+			if (rdir != endDirections[endDirectionsIdx]) {
+				endDirectionsIdx = -1;
+#if UNITY_EDITOR
+				Debug.Log("sequence aborted");
+#endif
+				return;
+			}
+			endDirectionsIdx++;
+
+			if (endDirectionsIdx >= endDirections.Count - 1) {
+#if UNITY_EDITOR
+				Debug.Log("show end");
+#endif
+				// show end doors, hide unnecessary stuff
+				endDoorShown = true;
+				endDirectionsIdx = -1;
+				var ray = new Ray(targetPos, ddir.ToVector());
+				RaycastHit hitInfo;
+				for (int i = -10; i <= 10; ++i) {
+					var startPos = targetPos + Map.checkDirs[((int)rdir + 1) % 4] * (i / 10f) * tileSize * 0.5f;
+					for (int j = 0; j <= 15; ++j) {
+						ray.origin = startPos + Vector3.up * (j / 15f) * 4f;
+						// Debug.DrawRay(ray.origin, ray.direction, Color.cyan, 10f);
+						if (Physics.Raycast(ray, out hitInfo, tileSize * 0.55f)) {
+							hitInfo.transform.gameObject.SetActive(false);
+						}
+					}
+				}
+				endContent.position = targetPos;
+				endContent.Rotate(0f, 90f * ((2 + (int)rdir) % 4), 0f);
+				endContent.gameObject.SetActive(true);
+				winFromPos = Base.Position2.RoundedVector(new Vector2(targetPos.x, targetPos.z) / tileSize);
+				winToPos = winFromPos + new Base.Position2(ddir.x, ddir.z);
+			}
+		}
+
+		//
+
+		public void Win() {
+			for (var iter = levelParent.GetComponentsInChildren<Renderer>().GetEnumerator(); iter.MoveNext();) {
+				((Renderer)(iter.Current)).gameObject.SetActive(false);
+			}
+			Map.Deactivate();
+			Score.Deactivate();
+			player.allowInput = false;
+			winHead.gameObject.SetActive(true);
+			blacknessFilter.gameObject.SetActive(true);
+		}
+
+		//
+
+		public void Die() {
+			if (dead) { return; }
+			dead = true;
+			MovementEffects.Timing.CallDelayed(0.5f, () => DieThen());
+		}
+
+		void DieThen() {
+			for (var iter = levelParent.GetComponentsInChildren<Enemy>().GetEnumerator(); iter.MoveNext();) {
+				((Enemy)(iter.Current)).gameObject.SetActive(false);
+			}
+			Map.Deactivate();
+			Score.Deactivate();
+			player.allowInput = false;
+			deadHead.gameObject.SetActive(true);
+			blacknessFilter.gameObject.SetActive(true);
+		}
 
 		public bool TileVisible(Base.Position2 pos) {
 			if (tilesByPos.ContainsKey(pos)) {
