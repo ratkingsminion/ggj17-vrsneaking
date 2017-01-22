@@ -14,6 +14,9 @@ namespace RatKing {
 			player.Collect(gameObject, takeTime);
 			Score.Add(value);
 			mayLookAt = false;
+			for (var iter = GetComponentsInChildren<Collider>(true).GetEnumerator(); iter.MoveNext(); ) {
+				((Collider)(iter.Current)).enabled = false;
+			}
 		}
 	}
 

@@ -34,6 +34,13 @@ namespace RatKing {
 
 		//
 
+		public Tile GetTile(Base.Position2 pos) {
+			if (tilesByPos.ContainsKey(pos)) {
+				return tilesByPos[pos];
+			}
+			return null;
+		}
+
 		void Awake() {
 			Inst = this;
 			Map.MapTheWorld(tileSize);
@@ -58,7 +65,7 @@ namespace RatKing {
 				room.Activate(false);
 			}
 			// pillars
-			for (var iter = pillarParent.GetComponentsInChildren<Transform>().GetEnumerator(); iter.MoveNext();) {
+			for (var iter = pillarParent.GetEnumerator(); iter.MoveNext();) {
 				var pillar = (Transform)(iter.Current);
 				if (pillar == pillarParent) { continue; }
 				var pos = pillar.position;
@@ -67,6 +74,7 @@ namespace RatKing {
 				for (int i = 0; i < 4; ++i) {
 					if (tilesByPos.ContainsKey(tiles[i])) { tilesByPos[tiles[i]].AddPillar(pillar.gameObject); }
 				}
+				pillar.gameObject.SetActive(false);
 			}
 			//
 			var m = blacknessFilter.mesh;
@@ -79,9 +87,11 @@ namespace RatKing {
 			blacknessFilter.gameObject.SetActive(false);
 			//
 			deadHead.gameObject.SetActive(true);
+			winHead.gameObject.SetActive(true);
 		}
 
 		void OnDestroy() {
+			LeanTween.cancelAll();
 			rainMaterial.SetTextureOffset("_MainTex", rainStartUV);
 		}
 
@@ -148,9 +158,11 @@ namespace RatKing {
 				RaycastHit hitInfo;
 				for (int i = -10; i <= 10; ++i) {
 					var startPos = targetPos + Map.checkDirs[((int)rdir + 1) % 4] * (i / 10f) * tileSize * 0.5f;
-					for (int j = 0; j <= 15; ++j) {
-						ray.origin = startPos + Vector3.up * (j / 15f) * 4f;
-						// Debug.DrawRay(ray.origin, ray.direction, Color.cyan, 10f);
+					for (int j = 0; j <= 12; ++j) {
+						ray.origin = startPos + Vector3.up * (j / 12f) * 3.5f;
+#if UNITY_EDITOR
+						Debug.DrawRay(ray.origin, ray.direction * tileSize * 0.55f, Color.cyan, 10f);
+#endif
 						if (Physics.Raycast(ray, out hitInfo, tileSize * 0.55f)) {
 							hitInfo.transform.gameObject.SetActive(false);
 						}
@@ -182,7 +194,8 @@ namespace RatKing {
 		public void Die() {
 			if (dead) { return; }
 			dead = true;
-			MovementEffects.Timing.CallDelayed(0.5f, () => DieThen());
+			//MovementEffects.Timing.CallDelayed(0.5f, () => DieThen());
+			DieThen();
 		}
 
 		void DieThen() {

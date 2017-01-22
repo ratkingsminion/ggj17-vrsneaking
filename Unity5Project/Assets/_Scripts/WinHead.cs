@@ -8,13 +8,22 @@ namespace RatKing {
 		public Transform endStuff;
 		public float wobbleSpeed = 1f;
 		public float wobbleStrength = 5f;
+		public float maxTime = 10f;
+		//
+		float timer;
+
+		//
 
 		void Start() {
-
+			gameObject.SetActive(false);
 		}
 
 		void Update() {
 			endStuff.localEulerAngles = new Vector3(0f, 0f, Mathf.Sin(Time.time * wobbleSpeed) * wobbleStrength);
+			timer += Time.deltaTime;
+			if (timer > maxTime || GvrViewer.Instance.Triggered) {
+				UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+			}
 		}
 	}
 

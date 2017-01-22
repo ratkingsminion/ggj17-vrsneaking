@@ -13,6 +13,30 @@ namespace RatKing {
 
 		//
 
+		public void FadeRevealersIn(float delay, float time) {
+			LeanTween.value(0f, 1f, time)
+				.setDelay(delay)
+				.setOnUpdate(f => {
+					for (var iter = tiles.GetEnumerator(); iter.MoveNext();) {
+						for (var iter_revealer = iter.Current.GetComponentsInChildren<RevealBack>().GetEnumerator(); iter_revealer.MoveNext();) {
+							((RevealBack)(iter_revealer.Current)).SetAlpha(f);
+						}
+					}
+				});
+		}
+
+		public void FadeRevealersOut(float delay, float time) {
+			LeanTween.value(1f, 0f, time)
+				.setDelay(delay)
+				.setOnUpdate(f => {
+					for (var iter = tiles.GetEnumerator(); iter.MoveNext();) {
+						for (var iter_revealer = iter.Current.GetComponentsInChildren<RevealBack>().GetEnumerator(); iter_revealer.MoveNext();) {
+							((RevealBack)(iter_revealer.Current)).SetAlpha(f);
+						}
+					}
+				});
+		}
+
 		public void Activate(bool activate) {
 			//print(activate + " " + name);
 			// show or hide all tiles

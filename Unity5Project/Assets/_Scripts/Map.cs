@@ -77,6 +77,7 @@ namespace RatKing {
 
 		static void AddMeshFace(int i) {
 			float tw2 = tileWidth * 0.5f;
+			if (i < 0 || i >= tiles.Count) { return; }
 			float x = tiles[i].x * tileWidth, y = tiles[i].y * tileWidth;
 			var v = new Vector3(x, 0f, y);
 			var vc = vertices.Count;
@@ -128,6 +129,7 @@ namespace RatKing {
 		}
 
 		public static void MapTheWorld(float tileSize) {
+			var mask = LayerMask.GetMask("Default");
 			tiles = new List<Base.Position2>();
 			tileConns = new List<ConnectionType[]>();
 			var checkPositions = new List<Vector3>();
@@ -139,19 +141,19 @@ namespace RatKing {
 				checkPositions.RemoveAt(curIndex);
 				var tilePos = Base.Position2.RoundedVector(new Vector2(cur.x, cur.z) / tileSize);
 				checkedTiles.Add(tilePos);
-				if (Physics.Raycast(new Ray(cur, Vector3.down), 2f)) {
+				if (Physics.Raycast(new Ray(cur, Vector3.down), 2f, mask)) {
 					// has floor
 					tiles.Add(tilePos);
 					if (tilePos.x < min.x) { min.x = tilePos.x; } if (tilePos.y < min.y) { min.y = tilePos.y; }
 					if (tilePos.x > max.x) { max.x = tilePos.x; } if (tilePos.y > max.y) { max.y = tilePos.y; }
 					var conns = new ConnectionType[4];
 					for (int i = 0; i < 4; ++i) {
-						if (!Physics.Raycast(new Ray(cur, checkDirs[i]), tileSize)) {
+						if (!Physics.Raycast(new Ray(cur, checkDirs[i]), tileSize, mask)) {
 							if (!checkedTiles.Contains(tilePos + checkTileDirs[i])) {
 								checkPositions.Add(cur + checkDirs[i] * tileSize);
 							}
 							var delta = checkDirs[(i + 1) % 4] * tileSize * 0.2f;
-							if (!Physics.Raycast(new Ray(cur + delta, checkDirs[i]), tileSize * 0.8f) && !Physics.Raycast(new Ray(cur + delta, checkDirs[i]), tileSize * 0.8f)) {
+							if (!Physics.Raycast(new Ray(cur + delta, checkDirs[i]), tileSize * 0.8f, mask) && !Physics.Raycast(new Ray(cur + delta, checkDirs[i]), tileSize * 0.8f, mask)) {
 								conns[i] = ConnectionType.None;
 							}
 							else {

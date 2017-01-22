@@ -18,7 +18,7 @@ namespace RatKing {
 
 		//
 
-		void Awake() {
+		void Start() {
 			headNextPos = headStartPos = head.localPosition;
 			headStartRot = head.localRotation;
 			gameObject.SetActive(false);

@@ -29,17 +29,20 @@ namespace RatKing {
 
 		void Start() {
 			lastPos = curPos = Base.Position2.RoundedVector(new Vector2(transform.position.x, transform.position.z) / Main.Inst.tileSize);
+			var curRoom = Main.Inst.GetTile(curPos).rooms[0]; // TODO BUG?
+			curRoom.FadeRevealersOut(0f, 1f);
 		}
 
 		void Update() {
 			if (!allowInput) {
+				HidePointers();
 				return;
 			}
-			
+
 			// looking at something.
 			RaycastHit hitInfo;
 			Ray ray = new Ray(camTrans.position, camTrans.forward);
-			bool hit = Physics.Raycast(ray, out hitInfo, Main.Inst.tileSize * 0.65f);
+			bool hit = Physics.Raycast(ray, out hitInfo, Main.Inst.tileSize * 0.75f);
 			var lookTimeFactor = 0f;
 			if (hit) {
 				var interactable = hitInfo.transform.GetComponent<Interactable>();
@@ -94,8 +97,10 @@ namespace RatKing {
 					});
 			}
 			else {
+				// normal moving
 				Main.Inst.Step(dir, targetPos);
-				LeanTween.move(gameObject, targetPos, dir.magnitude / moveSpeed)
+				float time = dir.magnitude / moveSpeed;
+				LeanTween.move(gameObject, targetPos, time)
 					.setEase(LeanTweenType.easeInOutSine)
 					.setOnComplete(() => {
 						moving = false;
@@ -105,6 +110,13 @@ namespace RatKing {
 						Main.Inst.UpdateVisibility(curPos, true);
 						Main.Inst.VisitRoom(curPos);
 					});
+
+				var curRoom = Main.Inst.GetTile(curPos).rooms[0]; // TODO BUG?
+				var nextRoom = Main.Inst.GetTile(nextPos).rooms[0]; // TODO BUG?
+				if (curRoom != nextRoom) {
+					curRoom.FadeRevealersIn(time * 0.5f, time * 0.5f);
+					nextRoom.FadeRevealersOut(0f, time * 0.5f);
+				}
 			}
 		}
 
@@ -125,10 +137,16 @@ namespace RatKing {
 
 		//
 
+		void HidePointers() {
+			pointer.gameObject.SetActive(false);
+			waitSymbol.gameObject.SetActive(false);
+		}
+
 		void ShowPointer(bool show, RaycastHit hit) {
 			pointer.gameObject.SetActive(show);
 			if (show) {
 				pointer.position = hit.point;
+				pointer.transform.LookAt(camTrans);
 			}
 			// move and show the waitsymbol
 			var showWait = waitSymbol.GetFactor() > 0f;
@@ -137,6 +155,7 @@ namespace RatKing {
 				waitSymbol.transform.LookAt(camTrans);
 			}
 			waitSymbol.gameObject.SetActive(showWait);
+			pointer.gameObject.SetActive(show && !showWait);
 		}
 	}
 

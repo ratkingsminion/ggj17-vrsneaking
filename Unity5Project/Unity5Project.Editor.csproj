@@ -421,6 +421,7 @@
     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMPro_Properties.cginc" />
     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMPro_Surface.cginc" />
     <None Include="Assets\_Materials\VertexColorUnlit.shader" />
+    <None Include="Assets\_Materials\VertexColorUnlit2.shader" />
     <None Include="Assets\_Materials\WaitTimer.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
