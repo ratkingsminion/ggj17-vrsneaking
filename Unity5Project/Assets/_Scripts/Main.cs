@@ -231,7 +231,8 @@ namespace RatKing {
 #if UNITY_EDITOR
 				Debug.Log("show end");
 #endif
-				var lastDir = Map.checkTileDirs[(int)(endDirections[endDirections.Count - 1])];
+				rdir = endDirections[endDirections.Count - 1];
+				var lastDir = Map.checkTileDirs[(int)rdir];
 				ddir.x = lastDir.x; ddir.z = lastDir.y;
 				// show end doors, hide unnecessary stuff
 				endDoorShown = true;
