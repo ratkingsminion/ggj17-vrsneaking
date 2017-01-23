@@ -17,6 +17,10 @@ namespace RatKing {
 
 		void Start() {
 			if (soundNormal != null) { curSoundNormal = soundNormal.Play(transform); }
+			resetTime = 0.3f;
+			for (int i = 0; i < directions.Count; ++i) {
+				resetTime += directionSounds[(int)directions[i]].clips[0].length + 0.1f;
+			}
 		}
 
 		public override void Interact(Player player) {

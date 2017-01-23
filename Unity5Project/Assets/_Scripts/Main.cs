@@ -135,7 +135,7 @@ namespace RatKing {
 			UpdateVisibility(pos0, false);
 			Main.Inst.VisitRoom(pos0);
 			//
-			Base.Music.Play(music, 0.5f, 5f);
+			Base.Music.Play(music, 0.5f, 2f);
 		}
 
 		void Update() {			
@@ -198,7 +198,7 @@ namespace RatKing {
 					lgtnLightningLight.enabled = false;
 					RenderSettings.ambientLight = nrmlAmbient;
 				});
-			MovementEffects.Timing.CallDelayed(Random.Range(2f, 3f), () => soundThunder.Play());
+			MovementEffects.Timing.CallDelayed(Random.Range(1f, 2f), () => soundThunder.Play());
 		}
 
 		//
@@ -231,14 +231,15 @@ namespace RatKing {
 #if UNITY_EDITOR
 				Debug.Log("show end");
 #endif
+				var lastDir = Map.checkTileDirs[(int)(endDirections[endDirections.Count - 1])];
+				ddir.x = lastDir.x; ddir.z = lastDir.y;
 				// show end doors, hide unnecessary stuff
 				endDoorShown = true;
-				endDirectionsIdx = -1;
 				var ray = new Ray(targetPos, ddir.ToVector());
 				RaycastHit hitInfo;
 				for (int i = -10; i <= 10; ++i) {
 					var startPos = targetPos + Map.checkDirs[((int)rdir + 1) % 4] * (i / 10f) * tileSize * 0.5f;
-					for (int j = 0; j <= 12; ++j) {
+					for (int j = 1; j <= 12; ++j) {
 						ray.origin = startPos + Vector3.up * (j / 12f) * 3.5f;
 #if UNITY_EDITOR
 						Debug.DrawRay(ray.origin, ray.direction * tileSize * 0.55f, Color.cyan, 10f);
@@ -253,16 +254,19 @@ namespace RatKing {
 				endContent.gameObject.SetActive(true);
 				winFromPos = Base.Position2.RoundedVector(new Vector2(targetPos.x, targetPos.z) / tileSize);
 				winToPos = winFromPos + new Base.Position2(ddir.x, ddir.z);
+				endDirectionsIdx = -1;
 			}
 		}
 
 		//
 
 		public void Win() {
+			if (won) { return; }
 			won = true;
 			for (var iter = levelParent.GetComponentsInChildren<Renderer>().GetEnumerator(); iter.MoveNext();) {
 				((Renderer)(iter.Current)).gameObject.SetActive(false);
 			}
+			Base.Music.Play(null, 0.3f, 1f);
 			Map.Deactivate();
 			Score.Deactivate();
 			player.allowInput = false;
@@ -281,6 +285,7 @@ namespace RatKing {
 		}
 
 		void DieThen() {
+			Base.Music.Play(null, 0.3f, 0.01f);
 			soundDeath.Play();
 			for (var iter = levelParent.GetComponentsInChildren<Enemy>().GetEnumerator(); iter.MoveNext();) {
 				((Enemy)(iter.Current)).gameObject.SetActive(false);
