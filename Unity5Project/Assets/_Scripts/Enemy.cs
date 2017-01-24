@@ -141,7 +141,7 @@ namespace RatKing {
 			*/
 
 				// something follows
-				for (int i = follows.Length - 1; i >= 0; --i) {
+			for (int i = follows.Length - 1; i >= 0; --i) {
 				follows[i].position = followOffsets[i] + transform.position;
 			}
 		}
@@ -153,6 +153,9 @@ namespace RatKing {
 					((Renderer)(iter.Current)).enabled = newVisible;
 				}
 				visible = newVisible;
+				for (int i = follows.Length - 1; i >= 0; --i) {
+					follows[i].gameObject.SetActive(newVisible);
+				}
 			}
 		}
 
